@@ -20,13 +20,13 @@ type Middleware func(http.HandlerFunc) http.HandlerFunc
 
 // User struct
 type User struct {
-	ID        uint   `gorm:"primaryKey"`
-	Email     string `gorm:"index:idx_email,unique"`
-	Name      string
-	Password  string
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+	ID        uint           `json:"id" gorm:"primaryKey"`
+	Email     string         `json:"email" gorm:"index:idx_email,unique"`
+	Name      string         `json:"name"`
+	Password  string         `json:"-"`
+	CreatedAt time.Time      `json:"createdAt"`
+	UpdatedAt time.Time      `json:"updatedAt"`
+	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
 // Logging !
@@ -44,11 +44,12 @@ func Logging() Middleware {
 
 // CreateUser !
 func CreateUser(w http.ResponseWriter, r *http.Request) {
-	password, _ := HashPassword("secret")
+	vars := mux.Vars(r)
+	password, _ := HashPassword(vars["password"])
 	user := &User{
-		Name:     "TestUser",
+		Name:     vars["name"],
 		Password: password,
-		Email:    "test@test.com",
+		Email:    vars["email"],
 	}
 
 	db.Create(&user)
