@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -44,15 +45,29 @@ func Logging() Middleware {
 
 // CreateUser !
 func CreateUser(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	password, _ := HashPassword(vars["password"])
-	user := &User{
-		Name:     vars["name"],
-		Password: password,
-		Email:    vars["email"],
+	var user User
+	err := json.NewDecoder(r.Body).Decode(&user)
+
+	if err != nil {
+		return
 	}
 
+	password, _ := HashPassword(user.Password)
+	user.Password = password
+
 	db.Create(&user)
+
+	w.Header().Set("Content-type", "application/json")
+	json.NewEncoder(w).Encode(&user)
+}
+
+// GetUserByID !
+func GetUserByID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, _ := strconv.Atoi(vars["id"])
+
+	var user User
+	db.Find(&user, id)
 
 	w.Header().Set("Content-type", "application/json")
 	json.NewEncoder(w).Encode(&user)
@@ -86,6 +101,7 @@ func main() {
 	db.Debug().AutoMigrate(&User{})
 
 	r.HandleFunc("/users", Chain(CreateUser, Logging())).Methods("POST")
+	r.HandleFunc("/users/{id}", Chain(GetUserByID, Logging())).Methods("GET")
 
 	// user := User{
 	// 	Name:     "johndoe",
