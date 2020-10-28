@@ -21,13 +21,20 @@ type Middleware func(http.HandlerFunc) http.HandlerFunc
 
 // User struct
 type User struct {
-	ID        uint           `json:"id" gorm:"primaryKey"`
-	Email     string         `json:"email" gorm:"index:idx_email,unique"`
-	Name      string         `json:"name"`
-	Password  string         `json:"-"`
-	CreatedAt time.Time      `json:"createdAt"`
-	UpdatedAt time.Time      `json:"updatedAt"`
-	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
+	gorm.Model
+	ID       uint   `json:"id" gorm:"primaryKey"`
+	Email    string `json:"email" gorm:"index:idx_email,unique"`
+	Name     string `json:"name"`
+	Password string `json:"-"`
+	Todos    []Todo
+}
+
+// Todo struct
+type Todo struct {
+	gorm.Model
+	ID     uint   `json:"id" gorm:"primaryKey"`
+	UserID uint   `json:"user_id" gorm:"index:idx_user"`
+	Desc   string `json:"desc" gorm:"index:idx_desc"`
 }
 
 // Logging !
@@ -97,8 +104,8 @@ func CheckPasswordHash(password, hash string) bool {
 func main() {
 	r := mux.NewRouter()
 
-	db.Debug().Migrator().DropTable(&User{})
-	db.Debug().AutoMigrate(&User{})
+	db.Debug().Migrator().DropTable(&User{}, Todo{})
+	db.Debug().AutoMigrate(&User{}, &Todo{})
 
 	r.HandleFunc("/users", Chain(CreateUser, Logging())).Methods("POST")
 	r.HandleFunc("/users/{id}", Chain(GetUserByID, Logging())).Methods("GET")
