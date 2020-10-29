@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"gorm.io/driver/mysql"
@@ -11,6 +12,7 @@ import (
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/hooneun/golang-web-tutorial/app/helpers"
 	"github.com/hooneun/golang-web-tutorial/app/models"
 	"github.com/hooneun/golang-web-tutorial/app/restapis"
 )
@@ -47,16 +49,17 @@ func Auth() Middleware {
 	return func(f http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-type", "application/json")
-			json.NewEncoder(w).Encode("Auth un")
-			// authoriztion := r.Header.Get("Authorization")
-			// token := strings.Split(authoriztion, " ")
+			authoriztion := r.Header.Get("Authorization")
+			token := strings.Split(authoriztion, " ")
 
-			// log.Info(helpers.CheckJWTToken(token[1]))
-			// if token[0] != 'Bearer' {
-			// 	w.Header().Set("Content-type", "application/json")
-			// 	json.NewEncoder(w).Encode(&user)
-			// }
+			_, err := helpers.CheckJWTToken(token[1])
 
+			if err != nil {
+				w.Header().Set("Content-type", "application/json")
+				json.NewEncoder(w).Encode("unauth")
+				return
+			}
+			f(w, r)
 		}
 	}
 }
