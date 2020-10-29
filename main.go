@@ -1,41 +1,23 @@
 package main
 
 import (
-	"encoding/json"
 	"net/http"
-	"strconv"
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/hooneun/golang-web-tutorial/app/models"
+	"github.com/hooneun/golang-web-tutorial/app/restapis"
 )
 
 var db, _ = gorm.Open(mysql.Open("root:root@tcp(127.0.0.1:4444)/books?charset=utf8mb4&parseTime=True&loc=Local"), &gorm.Config{})
 
 // Middleware type
 type Middleware func(http.HandlerFunc) http.HandlerFunc
-
-// User struct
-type User struct {
-	gorm.Model
-	ID       uint   `json:"id" gorm:"primaryKey"`
-	Email    string `json:"email" gorm:"index:idx_email,unique"`
-	Name     string `json:"name"`
-	Password string `json:"-"`
-	Todos    []Todo
-}
-
-// Todo struct
-type Todo struct {
-	gorm.Model
-	ID     uint   `json:"id" gorm:"primaryKey"`
-	UserID uint   `json:"user_id" gorm:"index:idx_user"`
-	Desc   string `json:"desc" gorm:"index:idx_desc"`
-}
 
 // Logging !
 func Logging() Middleware {
@@ -50,36 +32,6 @@ func Logging() Middleware {
 	}
 }
 
-// CreateUser !
-func CreateUser(w http.ResponseWriter, r *http.Request) {
-	var user User
-	err := json.NewDecoder(r.Body).Decode(&user)
-
-	if err != nil {
-		return
-	}
-
-	password, _ := HashPassword(user.Password)
-	user.Password = password
-
-	db.Create(&user)
-
-	w.Header().Set("Content-type", "application/json")
-	json.NewEncoder(w).Encode(&user)
-}
-
-// GetUserByID !
-func GetUserByID(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, _ := strconv.Atoi(vars["id"])
-
-	var user User
-	db.Find(&user, id)
-
-	w.Header().Set("Content-type", "application/json")
-	json.NewEncoder(w).Encode(&user)
-}
-
 // Chain middlewares
 func Chain(f http.HandlerFunc, middlewares ...Middleware) http.HandlerFunc {
 	for _, m := range middlewares {
@@ -89,26 +41,19 @@ func Chain(f http.HandlerFunc, middlewares ...Middleware) http.HandlerFunc {
 	return f
 }
 
-// HashPassword !
-func HashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(bytes), err
-}
-
-// CheckPasswordHash !
-func CheckPasswordHash(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
-}
-
 func main() {
 	r := mux.NewRouter()
+	h, err := restapis.NewHandler()
 
-	db.Debug().Migrator().DropTable(&User{}, Todo{})
-	db.Debug().AutoMigrate(&User{}, &Todo{})
+	if err != nil {
+		log.Error(err)
+	}
 
-	r.HandleFunc("/users", Chain(CreateUser, Logging())).Methods("POST")
-	r.HandleFunc("/users/{id}", Chain(GetUserByID, Logging())).Methods("GET")
+	db.Debug().Migrator().DropTable(&models.User{}, models.Todo{})
+	db.Debug().AutoMigrate(&models.User{}, &models.Todo{})
+
+	r.HandleFunc("/users", Chain(h.CreateUser, Logging())).Methods("POST")
+	r.HandleFunc("/users/{id}", Chain(h.GetUserByID, Logging())).Methods("GET")
 
 	// user := User{
 	// 	Name:     "johndoe",
