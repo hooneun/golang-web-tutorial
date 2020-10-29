@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/hooneun/golang-web-tutorial/app/helpers"
 	"github.com/hooneun/golang-web-tutorial/app/models"
 	"github.com/hooneun/golang-web-tutorial/app/models/dblayer"
 
@@ -99,6 +100,12 @@ func (h *Handler) SignInUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	token, err := helpers.GetJWTToken(user.ID)
+
+	if err != nil {
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(&user)
+	json.NewEncoder(w).Encode(token)
 }

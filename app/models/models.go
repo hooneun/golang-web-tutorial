@@ -1,6 +1,8 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 // User struct
 type User struct {
@@ -12,7 +14,8 @@ type User struct {
 	Todos      []Todo
 }
 
-func (u *User) getUser() User {
+// GetUser !
+func (u *User) GetUser() User {
 	return User{
 		ID:    u.ID,
 		Email: u.Email,

@@ -27,7 +27,7 @@ func NewORM() (*DBORM, error) {
 func (db *DBORM) GetUserByID(id int) (user User, err error) {
 	err = db.Find(&user, id).Error
 
-	return user.getUser(), err
+	return user.GetUser(), err
 }
 
 // CreateUser - user create
@@ -35,7 +35,7 @@ func (db *DBORM) CreateUser(user User) (User, error) {
 	helpers.HashPassword(&user.Password)
 	err := db.Create(&user).Error
 
-	return user.getUser(), err
+	return user.GetUser(), err
 }
 
 // SignInUser user signin
@@ -49,5 +49,5 @@ func (db *DBORM) SignInUser(email string, password string) (user User, err error
 		return user, errors.New("Invalid password")
 	}
 
-	return user.getUser(), nil
+	return user.GetUser(), nil
 }
