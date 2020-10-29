@@ -49,7 +49,7 @@ func main() {
 		log.Error(err)
 	}
 
-	db.Debug().Migrator().DropTable(&models.User{}, models.Todo{})
+	db.Debug().Migrator().DropTable(&models.User{}, &models.Todo{})
 	db.Debug().AutoMigrate(&models.User{}, &models.Todo{})
 
 	r.HandleFunc("/users", Chain(h.CreateUser, Logging())).Methods("POST")
