@@ -48,7 +48,7 @@ func (h *Handler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 	user, err := h.db.GetUserByID(id)
 
 	if err != nil {
-
+		return
 	}
 
 	w.Header().Set("Content-type", "application/json")
@@ -65,7 +65,7 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&user)
 
 	if err != nil {
-
+		return
 	}
 
 	user, err = h.db.CreateUser(user)
