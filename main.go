@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -41,6 +42,25 @@ func Chain(f http.HandlerFunc, middlewares ...Middleware) http.HandlerFunc {
 	return f
 }
 
+// Auth !
+func Auth() Middleware {
+	return func(f http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-type", "application/json")
+			json.NewEncoder(w).Encode("Auth un")
+			// authoriztion := r.Header.Get("Authorization")
+			// token := strings.Split(authoriztion, " ")
+
+			// log.Info(helpers.CheckJWTToken(token[1]))
+			// if token[0] != 'Bearer' {
+			// 	w.Header().Set("Content-type", "application/json")
+			// 	json.NewEncoder(w).Encode(&user)
+			// }
+
+		}
+	}
+}
+
 func main() {
 	r := mux.NewRouter()
 	h, err := restapis.NewHandler()
@@ -53,7 +73,7 @@ func main() {
 	db.Debug().AutoMigrate(&models.User{}, &models.Todo{})
 
 	r.HandleFunc("/users", Chain(h.CreateUser, Logging())).Methods("POST")
-	r.HandleFunc("/users/{id}", Chain(h.GetUserByID, Logging())).Methods("GET")
+	r.HandleFunc("/users/{id}", Chain(h.GetUserByID, Auth(), Logging())).Methods("GET")
 	r.HandleFunc("/signin", Chain(h.SignInUser, Logging())).Methods("POST")
 
 	// user := User{

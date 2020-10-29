@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -39,4 +40,20 @@ func GetJWTToken(id uint) (JWTToken, error) {
 		ExpiresIn:   expirationTime,
 		TokenType:   "bearer",
 	}, err
+}
+
+// CheckJWTToken !
+func CheckJWTToken(t string) (*jwt.Token, error) {
+	token, err := jwt.Parse(t, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unauth")
+		}
+		return []byte(jwtSecretKey), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return token, nil
 }
