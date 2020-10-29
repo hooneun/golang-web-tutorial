@@ -54,6 +54,7 @@ func main() {
 
 	r.HandleFunc("/users", Chain(h.CreateUser, Logging())).Methods("POST")
 	r.HandleFunc("/users/{id}", Chain(h.GetUserByID, Logging())).Methods("GET")
+	r.HandleFunc("/signin", Chain(h.SignInUser, Logging())).Methods("POST")
 
 	// user := User{
 	// 	Name:     "johndoe",

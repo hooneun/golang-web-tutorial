@@ -1,6 +1,8 @@
 package models
 
 import (
+	"errors"
+
 	"github.com/hooneun/golang-web-tutorial/app/helpers"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -23,11 +25,29 @@ func NewORM() (*DBORM, error) {
 
 // GetUserByID - user data of id
 func (db *DBORM) GetUserByID(id int) (user User, err error) {
-	return user, db.Find(&user, id).Error
+	err = db.Find(&user, id).Error
+
+	return user.getUser(), err
 }
 
 // CreateUser - user create
 func (db *DBORM) CreateUser(user User) (User, error) {
 	helpers.HashPassword(&user.Password)
-	return user, db.Create(&user).Error
+	err := db.Create(&user).Error
+
+	return user.getUser(), err
+}
+
+// SignInUser user signin
+func (db *DBORM) SignInUser(email string, password string) (user User, err error) {
+	err = db.Where("email = ?", email).First(&user).Error
+	if err != nil {
+		return user, err
+	}
+
+	if !helpers.CheckPasswordHash(password, user.Password) {
+		return user, errors.New("Invalid password")
+	}
+
+	return user.getUser(), nil
 }

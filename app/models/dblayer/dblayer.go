@@ -6,4 +6,5 @@ import "github.com/hooneun/golang-web-tutorial/app/models"
 type DBLayer interface {
 	GetUserByID(int) (models.User, error)
 	CreateUser(models.User) (models.User, error)
+	SignInUser(string, string) (models.User, error)
 }

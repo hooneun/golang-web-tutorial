@@ -9,12 +9,15 @@ import (
 
 	"github.com/hooneun/golang-web-tutorial/app/models"
 	"github.com/hooneun/golang-web-tutorial/app/models/dblayer"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // HandlerInterface !
 type HandlerInterface interface {
 	GetUser(w http.ResponseWriter, r *http.Request)
 	CreateUser(w http.ResponseWriter, r *http.Request)
+	SignInUser(w http.ResponseWriter, r *http.Request)
 }
 
 // Handler !
@@ -74,4 +77,28 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "application/json")
 	json.NewEncoder(w).Encode(&user)
 	// return user, db.Create(&user).Error
+}
+
+// SignInUser Handler
+func (h *Handler) SignInUser(w http.ResponseWriter, r *http.Request) {
+	if h.db == nil {
+		return
+	}
+
+	var user models.User
+	err := json.NewDecoder(r.Body).Decode(&user)
+	log.Info(user.Email, user.Password)
+
+	if err != nil {
+
+	}
+
+	user, err = h.db.SignInUser(user.Email, user.Password)
+
+	if err != nil {
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(&user)
 }
