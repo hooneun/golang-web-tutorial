@@ -51,7 +51,6 @@ func Auth() Middleware {
 			w.Header().Set("Content-type", "application/json")
 			authoriztion := r.Header.Get("Authorization")
 			token := strings.Split(authoriztion, " ")
-
 			_, err := helpers.CheckJWTToken(token[1])
 
 			if err != nil {
